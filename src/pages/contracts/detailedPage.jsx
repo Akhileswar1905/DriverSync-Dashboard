@@ -78,6 +78,7 @@ const ContractDetailsPage = () => {
           const matchingPanels = [];
           const otherPanels = [];
           for (const p of user.controlPanels) {
+            console.log(p);
             const panel = await getCp(p);
 
             if (Array.isArray(panel.contracts) && panel.contracts.length > 0) {

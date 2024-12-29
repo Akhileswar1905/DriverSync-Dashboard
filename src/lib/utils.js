@@ -108,7 +108,7 @@ export const getCps = async () => {
 };
 
 export const getDriver = async (id) => {
-  let url = `${base_url}/driver/${id}`;
+  let url = `${base_url}/driver/id/${id}`;
   const res = await axios.get(url);
   console.log(res.data);
   return res.data;
