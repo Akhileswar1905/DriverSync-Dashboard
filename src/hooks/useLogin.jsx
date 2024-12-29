@@ -3,7 +3,7 @@ import { UserContext } from "../context/UserContext";
 import axios from "axios";
 import { useNavigate } from "react-router-dom";
 
-const baseUrl = "http://localhost:5050";
+const baseUrl = process.env.REACT_APP_BASE_URL;
 
 export const useLogin = () => {
   const { setUser } = useContext(UserContext);
