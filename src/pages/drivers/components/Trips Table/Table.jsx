@@ -1,7 +1,9 @@
-import React, { useContext, useState } from "react";
+import React, { useState } from "react";
+// import React, { useContext, useState } from "react";
 import { GrFormPrevious, GrFormNext } from "react-icons/gr";
 import { BiFilterAlt } from "react-icons/bi";
-import { UserContext } from "../../../../context/UserContext";
+// import { UserContext } from "../../../../context/UserContext";
+// import { getContract } from "../../../../lib/utils";
 
 const TripsTable = ({ driver }) => {
   const trips = driver.tripDetails || []; // Ensure tripDetails exists
@@ -48,17 +50,11 @@ const TripsTable = ({ driver }) => {
   const statusColors = {
     pending: "bg-yellow-300",
     Done: "bg-green-500",
-    "On Hold": "bg-red-500",
+    Rejected: "bg-red-500",
   };
 
-  const { user } = useContext(UserContext);
-
-  const getContract = (contractId) => {
-    const con = user?.contracts.findIndex(
-      (contract) => contract.contractId === contractId
-    );
-    return user?.contracts[con] ? user.contracts[con].companyName : "";
-  };
+  // const { user } = useContext(UserContext);
+  console.log(trips);
 
   return (
     <div className="border-2 px-8 py-6 rounded-lg">
@@ -80,7 +76,7 @@ const TripsTable = ({ driver }) => {
             <option value="">All Payment Status</option>
             <option value="pending">Pending</option>
             <option value="Done">Completed</option>
-            <option value="On Hold">On Hold</option>
+            <option value="Rejected">Rejected</option>
           </select>
           <button
             onClick={() => setIsDateFilterOpen(true)}
@@ -140,7 +136,7 @@ const TripsTable = ({ driver }) => {
         <thead className="text-[var(--grayish)]">
           <tr className="font-light">
             <th className="py-3 font-normal">Trip id</th>
-            <th className="py-3 font-normal">Contract</th>
+            {/* <th className="py-3 font-normal">Contract</th> */}
             <th className="py-3 font-normal">Date</th>
             <th className="py-3 font-normal">Payment Status</th>
           </tr>
@@ -150,7 +146,7 @@ const TripsTable = ({ driver }) => {
             currentRows.map((row, index) => (
               <tr className="cursor-pointer" key={index}>
                 <td className="py-4">{row.tripID}</td>
-                <td className="py-4">{getContract(row.contract)}</td>
+                {/* <td className="py-4">{getContract(row.contract, user)}</td> */}
                 <td className="py-4">{row.tripDate}</td>
                 <td className="py-4 flex items-center gap-2 capitalize">
                   <span

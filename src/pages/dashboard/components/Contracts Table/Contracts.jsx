@@ -1,10 +1,10 @@
 import React, { useContext, useState } from "react";
 import { GrFormPrevious, GrFormNext } from "react-icons/gr";
 import { UserContext } from "../../../../context/UserContext";
+import { NavLink } from "react-router-dom";
 
 const ContractTable = () => {
   const { user, loading } = useContext(UserContext);
-  console.log(loading);
   const [companies, setCompanies] = useState(user?.contracts);
 
   const [currentPage, setCurrentPage] = useState(1);
@@ -35,10 +35,16 @@ const ContractTable = () => {
           {currentRows?.length > 0 ? (
             currentRows?.map((row, index) => (
               <tr key={index}>
-                <td className="py-3 flex gap-4 items-center">
-                  <div className="w-[25px] h-[25px] rounded-full bg-[#ddd]"></div>
-                  {row.companyName}
-                </td>
+                <NavLink
+                  to={`/contracts/${row.contractId}`}
+                  state={{ contract: row }}
+                  className="hover:bg-gray-100"
+                >
+                  <td className="py-3 flex gap-4 items-center">
+                    <div className="w-[25px] h-[25px] rounded-full bg-[#ddd]"></div>
+                    {row.companyName}
+                  </td>
+                </NavLink>
               </tr>
             ))
           ) : (

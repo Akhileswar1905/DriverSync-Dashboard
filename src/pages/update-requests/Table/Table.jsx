@@ -2,162 +2,157 @@ import React, { useContext, useEffect, useState } from "react";
 import { GrFormPrevious, GrFormNext } from "react-icons/gr";
 import { BiFilterAlt } from "react-icons/bi";
 import { UserContext } from "../../../context/UserContext";
-import { NavLink } from "react-router-dom";
+import { acceptUpdateReq, getCpDrivers } from "../../../lib/utils";
+import SkeletonLoader from "../../../components/Skeleton/SkeletonLoader";
 
 const Table = () => {
   const { user } = useContext(UserContext);
   const [requests, setRequests] = useState([]);
+  const [loading, setLoading] = useState(true);
   const [drivers, setDrivers] = useState([]);
   useEffect(() => {
-    setRequests(user.updates || []); // Ensure `user.updates` is defined
-    setDrivers(user.drivers || []); // Ensure `user.drivers
+    setRequests(user.updates);
+    // setDrivers(user.drivers || []);
+    const fetchDrivers = async () => {
+      try {
+        const drivers = await getCpDrivers(user._id).catch((err) => {
+          console.error("Error fetching drivers:", err);
+          throw err;
+        });
+        if (drivers) {
+          setLoading(false);
+          setDrivers(drivers);
+        }
+      } catch (err) {
+        console.error("Error fetching drivers:", err);
+      }
+    };
+    fetchDrivers();
   }, [user]);
+
+  // console.log(drivers);
 
   const [currentPage, setCurrentPage] = useState(1);
   const [filter, setFilter] = useState("");
-  const [startDate, setStartDate] = useState("");
-  const [endDate, setEndDate] = useState("");
-  const [isDateFilterOpen, setIsDateFilterOpen] = useState(false);
-
-  const getDriver = (phoneNumber) => {
-    const driver = drivers.find((driver) => driver.phoneNumber === phoneNumber);
-    return driver ? driver.username : "Unknown Driver";
-  };
   const rowsPerPage = 10;
 
-  // Filter data
-  const filteredData = requests.filter((row) => {
-    const matchesName = getDriver(row.phoneNumber)
-      ?.toLowerCase()
-      .includes(filter.toLowerCase());
-    const withinDateRange =
-      (!startDate || row.date >= startDate) &&
-      (!endDate || row.date <= endDate);
+  const getDriverName = (phoneNumber) => {
+    const driver = drivers?.find((d) => d.phoneNumber === phoneNumber);
+    console.log(driver);
+    return driver ? driver.username : "Unknown Driver";
+  };
 
-    return matchesName && withinDateRange;
-  });
+  const filteredData = requests.filter((row) =>
+    getDriverName(row.phoneNumber).toLowerCase().includes(filter.toLowerCase())
+  );
 
   const totalPages = Math.ceil(filteredData.length / rowsPerPage);
   const startIndex = (currentPage - 1) * rowsPerPage;
   const currentRows = filteredData.slice(startIndex, startIndex + rowsPerPage);
 
   const changePage = (newPage) => {
-    if (newPage < 1 || newPage > totalPages) return;
-    setCurrentPage(newPage);
+    if (newPage >= 1 && newPage <= totalPages) setCurrentPage(newPage);
+  };
+
+  const handleAccept = async (trip) => {
+    // alert("Request Accepted");
+    const res = await acceptUpdateReq(trip);
+    setRequests(res);
   };
 
   return (
-    <div className=" border-2 px-8 py-6 rounded-lg">
+    <div className="border-2 px-8 py-6 rounded-lg">
       <div className="flex items-center justify-between mb-4">
-        <h2 className="text-3xl text-[var(--grayish)]">Update Requests</h2>
-        <div className="flex gap-4">
-          <div className="flex items-center gap-2">
-            <input
-              type="text"
-              value={filter}
-              onChange={(e) => setFilter(e.target.value)}
-              placeholder="Filter by Driver Name..."
-              className="border px-3 py-2 rounded-lg w-56"
-            />
-          </div>
-          <button
-            onClick={() => setIsDateFilterOpen(true)}
-            className="text-[var(--grayish)] cursor-pointer flex items-center gap-1"
-          >
+        <h2 className="text-3xl text-gray-700">Update Requests</h2>
+        <div className="flex items-center gap-2">
+          <input
+            type="text"
+            value={filter}
+            onChange={(e) => setFilter(e.target.value)}
+            placeholder="Filter by Driver Name..."
+            className="border px-3 py-2 rounded-lg w-56"
+          />
+          <button className="flex items-center gap-1 text-gray-700">
             <BiFilterAlt size={25} />
-            Filter by Date
+            Filter
           </button>
         </div>
       </div>
 
-      {/* Date Range Filter Dialog */}
-      {isDateFilterOpen && (
-        <div className="fixed inset-0 bg-black bg-opacity-50 flex justify-center items-center">
-          <div className="bg-white p-10 rounded-lg shadow-lg relative flex flex-col gap-5">
-            <h3 className="text-xl font-semibold mb-4 text-[var(--grayish)] ">
-              Filter by Date Range
-            </h3>
-            <div className="flex gap-4 flex-col">
-              <div>
-                <label className="block text-[var(--grayish)]">
-                  Start Date
-                </label>
-                <input
-                  type="date"
-                  value={startDate}
-                  onChange={(e) => setStartDate(e.target.value)}
-                  className="border px-3 py-2 rounded-lg w-full text-[var(--grayish)]"
-                />
-              </div>
-              <div>
-                <label className="block text-[var(--grayish)]">End Date</label>
-                <input
-                  type="date"
-                  value={endDate}
-                  onChange={(e) => setEndDate(e.target.value)}
-                  className="border px-3 py-2 rounded-lg w-full text-[var(--grayish)]"
-                />
-              </div>
-            </div>
-            <div className="flex justify-end gap-4 mt-6">
-              <button
-                onClick={() => setIsDateFilterOpen(false)}
-                className="px-4 py-2 rounded-lg border-2"
-              >
-                Cancel
-              </button>
-              <button
-                onClick={() => setIsDateFilterOpen(false)}
-                className="px-4 py-2 rounded-lg bg-[var(--primary-green)] text-white"
-              >
-                Apply Filter
-              </button>
-            </div>
+      {loading ? (
+        <>
+          <table className="border-collapse w-full text-left my-5">
+            <thead className="text-[var(--grayish)]">
+              <tr className="font-light">
+                <th className="py-3 font-normal">Driver Name</th>
+                <th className="py-3 font-normal">Phone Number</th>
+                <th className="py-3 font-normal">Trip ID</th>
+                <th className="py-3 font-normal">Trip Date</th>
+                <th className="py-3 font-normal">Action</th>
+              </tr>
+            </thead>
+          </table>
+          <div className="grid gap-4">
+            {Array.from({ length: rowsPerPage }).map((_, index) => (
+              <SkeletonLoader key={index} count={5} />
+            ))}
           </div>
-        </div>
-      )}
-
-      <table className="border-collapse w-full text-left my-5">
-        <thead className="text-[var(--grayish)]">
-          <tr className="font-light">
-            <th className="py-3 font-normal">Driver Name</th>
-            <th className="py-3 font-normal">Phone Number</th>
-            <th className="py-3 font-normal">Actions</th>
-          </tr>
-        </thead>
-        <tbody>
-          {currentRows.length > 0 ? (
-            currentRows.map((row, index) => (
-              <tr key={index} className="cursor-pointer  gap-1">
-                <td className="py-2">{getDriver(row.phoneNumber)}</td>
-                <td className="py-2">{row.phoneNumber}</td>
-                <td className="py-2 flex gap-6">
-                  <NavLink
-                    to={`/trip-update/${row.phoneNumber}`}
-                    className="text-[var(--primary-green)] border-2 p-2 rounded-md"
-                  >
-                    View Request
-                  </NavLink>
+        </>
+      ) : (
+        <table className=" border-collapse w-full text-left my-5">
+          <thead className="text-[var(--grayish)]">
+            <tr className="font-light">
+              <th className="py-3 font-normal">Driver Name</th>
+              <th className="py-3 font-normal">Phone Number</th>
+              <th className="py-3 font-normal">Trip ID</th>
+              <th className="py-3 font-normal">Trip Date</th>
+              <th className="py-3 font-normal">Action</th>
+            </tr>
+          </thead>
+          <tbody>
+            {currentRows.length > 0 ? (
+              currentRows.map((row, index) => (
+                <tr key={index}>
+                  <td className="py-2">{getDriverName(row.phoneNumber)}</td>
+                  <td className="py-2">{row.phoneNumber}</td>
+                  <td className="py-2">{row.trip.tripID}</td>
+                  <td className="py-2">{row.trip.tripDate}</td>
+                  <td className="py-2">
+                    {row.trip.status === "not-allowed" ? (
+                      <button
+                        className="px-3 py-1 bg-green-500 text-white rounded-md"
+                        onClick={() => handleAccept(row)}
+                      >
+                        Allow
+                      </button>
+                    ) : (
+                      <button
+                        className="px-3 py-1 bg-green-400 text-white rounded-md"
+                        disabled
+                      >
+                        Allowed
+                      </button>
+                    )}
+                  </td>
+                </tr>
+              ))
+            ) : (
+              <tr>
+                <td colSpan="7" className="text-center py-4">
+                  No records found
                 </td>
               </tr>
-            ))
-          ) : (
-            <tr>
-              <td colSpan="4" className="text-center py-4">
-                No records found
-              </td>
-            </tr>
-          )}
-        </tbody>
-      </table>
+            )}
+          </tbody>
+        </table>
+      )}
 
-      {/* Pagination Controls */}
       {totalPages > 1 && (
         <div className="flex justify-center mt-4 items-center">
           <button
             onClick={() => changePage(currentPage - 1)}
-            className="text-[var(--grayish)]"
             disabled={currentPage === 1}
+            className="text-gray-600"
           >
             <GrFormPrevious />
           </button>
@@ -165,17 +160,19 @@ const Table = () => {
             <button
               key={i}
               onClick={() => changePage(i + 1)}
-              className={`px-1 py-1 w-1 h-1 border rounded-lg mx-1 ${
+              className={`mx-1 px-2 py-1 rounded ${
                 currentPage === i + 1
-                  ? "bg-[var(--grayish)] text-white"
+                  ? "bg-gray-600 text-white"
                   : "bg-gray-200 hover:bg-gray-300"
               }`}
-            ></button>
+            >
+              {i + 1}
+            </button>
           ))}
           <button
-            className="text-[var(--grayish)]"
             onClick={() => changePage(currentPage + 1)}
             disabled={currentPage === totalPages}
+            className="text-gray-600"
           >
             <GrFormNext />
           </button>

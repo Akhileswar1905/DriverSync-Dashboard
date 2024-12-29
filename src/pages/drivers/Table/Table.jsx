@@ -3,23 +3,30 @@ import { GrFormPrevious, GrFormNext } from "react-icons/gr";
 import { BiFilterAlt } from "react-icons/bi";
 import { NavLink } from "react-router-dom";
 import { UserContext } from "../../../context/UserContext";
-import { getAllDrivers } from "../../../lib/utils";
+import { getAllDrivers, getCpDrivers } from "../../../lib/utils";
+import SkeletonLoader from "../../../components/Skeleton/SkeletonLoader";
 
 const Table = () => {
   const { user } = useContext(UserContext);
-  const [drivers, setDrivers] = useState([]); // Use actual driver data from user context
-  console.log(drivers);
+  const [drivers, setDrivers] = useState([]);
+  const [loading, setLoading] = useState(true);
 
   useEffect(() => {
     const fetchDrivers = async () => {
-      if (!user) return; // If no user, just return or handle loading state
+      if (!user) return;
 
       if (user.isAdmin) {
         const tempDrivers = await getAllDrivers();
-        setDrivers(tempDrivers);
+        if (tempDrivers) {
+          setDrivers(tempDrivers);
+        }
       } else {
-        setDrivers(user.drivers); // Use actual driver data from user context
+        const tempDrivers = await getCpDrivers(user._id);
+        if (tempDrivers) {
+          setDrivers(tempDrivers);
+        }
       }
+      setLoading(false); // Stop loading after data is fetched
     };
 
     fetchDrivers();
@@ -125,41 +132,62 @@ const Table = () => {
         </div>
       )}
 
-      <table className="border-collapse w-full text-left my-5">
-        <thead className="text-[var(--grayish)]">
-          <tr className="font-light">
-            <th className="py-3 font-normal">Driver Name</th>
-            <th className="py-3 font-normal">Vehicle Number</th>
-            <th className="py-3 font-normal">Number of Trips</th>
-            <th className="py-3 font-normal">Phone Number</th>
-            <th className="py-3 font-normal">Date of Joining</th>
-          </tr>
-        </thead>
-        <tbody>
-          {currentRows.length > 0 ? (
-            currentRows.map((row, index) => (
-              <tr key={index} className="cursor-pointer gap-1">
-                <NavLink
-                  to={`/drivers/${row.phoneNumber}/bio-data`}
-                  state={{ driver: row }}
-                >
-                  <td className="py-4">{row.username}</td>
-                </NavLink>
-                <td className="py-4">{row.vehicleNumber}</td>
-                <td className="py-4">{row.tripDetails.length}</td>
-                <td className="py-4">{row.phoneNumber}</td>
-                <td className="py-4">{row.dateOfJoining}</td>
+      {loading ? (
+        <>
+          <table className="border-collapse w-full text-left my-5">
+            <thead className="text-[var(--grayish)]">
+              <tr className="font-light">
+                <th className="py-3 font-normal">Driver Name</th>
+                <th className="py-3 font-normal">Vehicle Number</th>
+                <th className="py-3 font-normal">Number of Trips</th>
+                <th className="py-3 font-normal">Phone Number</th>
+                <th className="py-3 font-normal">Date of Joining</th>
               </tr>
-            ))
-          ) : (
-            <tr>
-              <td colSpan="5" className="text-center py-4">
-                No records found
-              </td>
+            </thead>
+          </table>
+          <div className="grid gap-4 w-full">
+            {Array.from({ length: rowsPerPage }).map((_, index) => (
+              <SkeletonLoader key={index} count={5} />
+            ))}
+          </div>
+        </>
+      ) : (
+        <table className="border-collapse w-full text-left my-5">
+          <thead className="text-[var(--grayish)]">
+            <tr className="font-light">
+              <th className="py-3 font-normal">Driver Name</th>
+              <th className="py-3 font-normal">Vehicle Number</th>
+              <th className="py-3 font-normal">Number of Trips</th>
+              <th className="py-3 font-normal">Phone Number</th>
+              <th className="py-3 font-normal">Date of Joining</th>
             </tr>
-          )}
-        </tbody>
-      </table>
+          </thead>
+          <tbody>
+            {currentRows.length > 0 ? (
+              currentRows.map((row, index) => (
+                <tr key={index} className="cursor-pointer gap-1">
+                  <NavLink
+                    to={`/drivers/${row.phoneNumber}/bio-data`}
+                    state={{ driver: row }}
+                  >
+                    <td className="py-4">{row.username}</td>
+                  </NavLink>
+                  <td className="py-4">{row.vehicleNumber}</td>
+                  <td className="py-4">{row.tripDetails.length}</td>
+                  <td className="py-4">{row.phoneNumber}</td>
+                  <td className="py-4">{row.dateOfJoining}</td>
+                </tr>
+              ))
+            ) : (
+              <tr>
+                <td colSpan="5" className="text-center py-4">
+                  No records found
+                </td>
+              </tr>
+            )}
+          </tbody>
+        </table>
+      )}
 
       {/* Pagination Controls */}
       {totalPages > 0 && (

@@ -4,15 +4,25 @@ import { BiFilterAlt } from "react-icons/bi";
 import { NavLink } from "react-router-dom";
 import { UserContext } from "../../../context/UserContext";
 import { FaPlus } from "react-icons/fa6";
+import { getCps } from "../../../lib/utils";
+import SkeletonLoader from "../../../components/Skeleton/SkeletonLoader";
 
 const Table = () => {
   const { user } = useContext(UserContext);
+  const [loading, setLoading] = useState(true);
   const [controlPanels, setControlPanels] = useState([]); // Use actual driver data from user context
   console.log(controlPanels);
 
   useEffect(() => {
     if (!user) return; // If no user, just return or handle loading state
-    setControlPanels(user.controlPanels); // Use actual driver data from user context
+    const fetcher = async () => {
+      const cps = await getCps();
+      if (cps) {
+        setLoading(false);
+        setControlPanels(cps);
+      }
+    };
+    fetcher();
   }, [user]);
 
   const [currentPage, setCurrentPage] = useState(1);
@@ -121,39 +131,59 @@ const Table = () => {
         </div>
       )}
 
-      <table className="border-collapse w-full text-left my-5">
-        <thead className="text-[var(--grayish)]">
-          <tr className="font-light">
-            <th className="py-3 font-normal">Control Panel Name</th>
-            <th className="py-3 font-normal">Number of Drivers</th>
-            <th className="py-3 font-normal">Phone Number</th>
-            <th className="py-3 font-normal">Date of Joining</th>
-          </tr>
-        </thead>
-        <tbody>
-          {currentRows.length > 0 ? (
-            currentRows.map((row, index) => (
-              <tr key={index} className="cursor-pointer gap-1">
-                <NavLink
-                  to={`/control-panels/${row.phoneNumber}/bio-data`}
-                  state={{ cp: row }}
-                >
-                  <td className="py-4">{row.username}</td>
-                </NavLink>
-                <td className="py-4">{row.drivers.length}</td>
-                <td className="py-4">{row.phoneNumber}</td>
-                <td className="py-4">{row.dateOfJoining}</td>
+      {loading ? (
+        <>
+          <table className="border-collapse w-full text-left my-5">
+            <thead className="text-[var(--grayish)]">
+              <tr className="font-light">
+                <th className="py-3 font-normal">Control Panel Name</th>
+                <th className="py-3 font-normal">Number of Drivers</th>
+                <th className="py-3 font-normal">Phone Number</th>
+                <th className="py-3 font-normal">Date of Joining</th>
               </tr>
-            ))
-          ) : (
-            <tr>
-              <td colSpan="5" className="text-center py-4">
-                No records found
-              </td>
+            </thead>
+          </table>
+          <div className="grid gap-4">
+            {Array.from({ length: rowsPerPage }).map((_, index) => (
+              <SkeletonLoader key={index} count={4} />
+            ))}
+          </div>
+        </>
+      ) : (
+        <table className="border-collapse w-full text-left my-5">
+          <thead className="text-[var(--grayish)]">
+            <tr className="font-light">
+              <th className="py-3 font-normal">Control Panel Name</th>
+              <th className="py-3 font-normal">Number of Drivers</th>
+              <th className="py-3 font-normal">Phone Number</th>
+              <th className="py-3 font-normal">Date of Joining</th>
             </tr>
-          )}
-        </tbody>
-      </table>
+          </thead>
+          <tbody>
+            {currentRows.length > 0 ? (
+              currentRows.map((row, index) => (
+                <tr key={index} className="cursor-pointer gap-1">
+                  <NavLink
+                    to={`/control-panels/${row.phoneNumber}/bio-data`}
+                    state={{ cp: row }}
+                  >
+                    <td className="py-4">{row.username}</td>
+                  </NavLink>
+                  <td className="py-4">{row.drivers.length}</td>
+                  <td className="py-4">{row.phoneNumber}</td>
+                  <td className="py-4">{row.dateOfJoining}</td>
+                </tr>
+              ))
+            ) : (
+              <tr>
+                <td colSpan="5" className="text-center py-4">
+                  No records found
+                </td>
+              </tr>
+            )}
+          </tbody>
+        </table>
+      )}
 
       {/* Pagination Controls */}
       {totalPages > 0 && (

@@ -1,34 +1,24 @@
 import React, { useContext, useState } from "react";
 import { GrFormPrevious, GrFormNext } from "react-icons/gr";
-import { BiFilterAlt } from "react-icons/bi";
 import { UserContext } from "../../../../context/UserContext";
 import { NavLink } from "react-router-dom";
+import { BiFilterAlt } from "react-icons/bi";
 
 const Table = () => {
   const { user } = useContext(UserContext);
-  const [drivers, setDrivers] = useState(user?.drivers || []);
-  // Get the data for table rows using the driver's information
-  const data = drivers.map((driver) => ({
-    username: driver.username, // Assuming the driver has a `name` property
-    vehicleNumber: driver.vehicleNumber, // Assuming the driver has a `vehicleNumber` property
-    trips: driver.tripDetails.length, // Count the number of trips from the `tripDetails` array
-    phoneNumber: driver.phoneNumber, // Assuming the driver has a `phoneNumber`
-    email: driver.email, // Assuming the driver has a `email` property
-    dob: driver.dob,
-    tripDetails: driver.tripDetails,
-    earnings: driver.earnings,
-    photo: driver.photo,
-    amountPaid: `₹${driver.earnings
-      .reduce((total, trip) => total + parseFloat(trip.amount || 0), 0)
-      .toFixed(2)}`,
-    vehicleRC: driver.vehicleRC,
-    DrivingLicense: driver.DrivingLicense,
-    vehiclePhotos: driver.vehiclePhotos,
-    vehicleVideo: driver.vehicleVideo,
-  }));
+  const data = user.isAdmin ? user.payReqs : user.reports;
+
+  // Sort the data by reportDate in descending order
+  data.sort((a, b) => {
+    const dateA = new Date(a.reportDate);
+    const dateB = new Date(b.reportDate);
+    return dateB - dateA;
+  });
+
+  // Get only top 10 records in data
+  data.splice(10);
 
   const [currentPage, setCurrentPage] = useState(1);
-  const [filter, setFilter] = useState("");
   const [startDate, setStartDate] = useState("");
   const [endDate, setEndDate] = useState("");
   const [isDateFilterOpen, setIsDateFilterOpen] = useState(false);
@@ -37,14 +27,10 @@ const Table = () => {
 
   // Filter data
   const filteredData = data.filter((row) => {
-    const matchesName = row.username
-      .toLowerCase()
-      .startsWith(filter.toLowerCase());
     const withinDateRange =
-      (!startDate || row.date >= startDate) &&
-      (!endDate || row.date <= endDate);
-
-    return matchesName && withinDateRange;
+      (!startDate || row.reportDate >= startDate) &&
+      (!endDate || row.reportDate <= endDate);
+    return withinDateRange;
   });
 
   const totalPages = Math.ceil(filteredData.length / rowsPerPage);
@@ -61,22 +47,14 @@ const Table = () => {
       <div className="flex items-center justify-between mb-4">
         <h2 className="text-3xl text-[var(--grayish)]">Recent Transactions</h2>
         <div className="flex gap-4">
-          <div className="flex items-center gap-2">
-            <input
-              type="text"
-              value={filter}
-              onChange={(e) => setFilter(e.target.value)}
-              placeholder="Filter by Driver Name..."
-              className="border px-3 py-2 rounded-lg w-56"
-            />
-          </div>
-          {/* <button
+          <div className="flex items-center gap-2"></div>
+          <button
             onClick={() => setIsDateFilterOpen(true)}
             className="text-[var(--grayish)] cursor-pointer flex items-center gap-1"
           >
             <BiFilterAlt size={25} />
             Filter by Date
-          </button> */}
+          </button>
         </div>
       </div>
 
@@ -130,11 +108,11 @@ const Table = () => {
       <table className="border-collapse w-full text-left my-5">
         <thead className="text-[var(--grayish)]">
           <tr className="font-light">
-            <th className="py-3 font-normal">Driver Name</th>
-            <th className="py-3 font-normal">Vehicle Number</th>
-            <th className="py-3 font-normal">Number of Trips</th>
-            <th className="py-3 font-normal">Amount Paid</th>
-            <th className="py-3 font-normal">Date</th>
+            <th className="py-3 font-normal">Report Id</th>
+            <th className="py-3 font-normal">Report Date</th>
+            <th className="py-3 font-normal">Status</th>
+            {/* <th className="py-3 font-normal">Amount Paid</th>
+            <th className="py-3 font-normal">Date</th> */}
           </tr>
         </thead>
         <tbody>
@@ -142,14 +120,14 @@ const Table = () => {
             currentRows.map((row, index) => (
               <tr key={index}>
                 <NavLink
-                  to={`/drivers/${row.phoneNumber}/bio-data`}
-                  state={{ driver: row }}
+                  to={`/transaction-reports/${row.reportId}`}
+                  state={{ report: row }}
                 >
-                  <td className="py-4 ">{row.username}</td>
+                  <td className="py-4 ">{row.reportId}</td>
                 </NavLink>{" "}
-                <td className="py-2">{row.vehicleNumber}</td>
-                <td className="py-2">{row.trips}</td>
-                <td className="py-2">{row.amountPaid}</td>
+                <td className="py-2">{row.reportDate}</td>
+                <td className="py-2">{row.status}</td>
+                {/* <td className="py-2">{row.amountPaid}</td> */}
                 {/* <td className="py-2">{row.date}</td> */}
               </tr>
             ))

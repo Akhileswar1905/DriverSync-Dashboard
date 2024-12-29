@@ -3,6 +3,7 @@ import { GrFormPrevious, GrFormNext } from "react-icons/gr";
 import { BiFilterAlt } from "react-icons/bi";
 import { UserContext } from "../../../context/UserContext";
 import { NavLink } from "react-router-dom";
+import { getCp } from "../../../lib/utils";
 
 const AdminReports = () => {
   const [currentPage, setCurrentPage] = useState(1);
@@ -18,7 +19,11 @@ const AdminReports = () => {
 
   useEffect(() => {
     if (user?.payReqs) {
-      setReports(user.payReqs);
+      setReports(
+        user.payReqs.sort(
+          (a, b) => new Date(b.reportDate) - new Date(a.reportDate)
+        )
+      );
       console.log("Pay reqs", user.payReqs);
     }
   }, [user, user?.payReqs]);
@@ -140,7 +145,6 @@ const AdminReports = () => {
         <thead className="text-[var(--grayish)]">
           <tr className="font-light">
             <th className="py-3 font-normal">Transaction Id</th>
-            <th className="py-3 font-normal">Control Panel</th>
 
             <th className="py-3 font-normal">Date of Creation</th>
             <th className="py-3 font-normal">Status</th>
@@ -156,8 +160,6 @@ const AdminReports = () => {
                 >
                   <td className="py-4">{row.reportId}</td>
                 </NavLink>
-
-                <td className="py-4">{row.cpName}</td>
 
                 <td className="py-4">
                   {new Date(row.reportDate).toISOString().split("T")[0]}

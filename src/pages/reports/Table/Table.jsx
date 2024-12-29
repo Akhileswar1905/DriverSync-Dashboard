@@ -21,7 +21,12 @@ const Table = () => {
 
   useEffect(() => {
     if (user?.reports) {
-      setReports(user.reports);
+      const sortedReports =
+        user.reports &&
+        user.reports.sort(
+          (a, b) => new Date(b.reportDate) - new Date(a.reportDate)
+        );
+      setReports(sortedReports);
     }
   }, [user]);
 
@@ -54,7 +59,7 @@ const Table = () => {
   const statusColor = (status) => {
     switch (status) {
       case "Done":
-        return "bg-green-500"; // Green for Approved
+        return "bg-primary-green"; // Green for Approved
       case "Rejected":
         return "bg-red-500"; // Red for Rejected
       case "Pending":
@@ -70,7 +75,10 @@ const Table = () => {
     const res = await generateReport(user._id);
     console.log(res);
     // Set the reports by adding the response report to the reports and render it on the page
-    setReports([...reports, res]);
+    // Sort them in descending order based on the date
+    setReports(
+      [res, ...reports].sort((a, b) => new Date(b.date) - new Date(a.date))
+    );
     console.log("Clicked");
   };
 

@@ -19,8 +19,8 @@ export const UserProvider = ({ children }) => {
       }
 
       const base = isAdmin
-        ? "http://localhost:5050/admin"
-        : `http://localhost:5050/cp/${userId}`;
+        ? `${process.env.REACT_APP_BASE_URL}/admin`
+        : `${process.env.REACT_APP_BASE_URL}/cp/${userId}`;
 
       const response = await fetch(base);
       if (!response.ok) {

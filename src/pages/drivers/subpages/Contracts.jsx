@@ -18,7 +18,7 @@ const DriverContracts = () => {
           </tr>
         </thead>
         <tbody>
-          {driver.contractDetails.map((contract) => (
+          {driver?.contractDetails.map((contract) => (
             <tr className="font-light" key={contract.contractId}>
               <td className="py-2">{contract.companyName}</td>
               <td className="py-2">{contract.amount}</td>

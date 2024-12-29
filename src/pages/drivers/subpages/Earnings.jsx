@@ -7,7 +7,7 @@ const Earnings = () => {
   const location = useLocation();
   const { driver } = location.state;
   const earnings = driver?.earnings || [];
-  const tripDetails = driver?.tripDetails || [];
+
   const [filterType, setFilterType] = useState("all");
   const [startDate, setStartDate] = useState("");
   const [endDate, setEndDate] = useState("");
@@ -23,21 +23,23 @@ const Earnings = () => {
   };
 
   // Filter trips based on the selected filter
-  const filteredTrips = earnings.filter((trip) => {
-    const tripDate = parseDate(trip.tripDate);
-    if (filterType === "dateRange") {
-      const start = startDate ? new Date(startDate) : null;
-      const end = endDate ? new Date(endDate) : null;
-      return (!start || tripDate >= start) && (!end || tripDate <= end);
-    } else if (filterType === "monthly") {
-      const [year, month] = selectedMonth.split("-");
-      return (
-        tripDate.getFullYear() === parseInt(year, 10) &&
-        tripDate.getMonth() + 1 === parseInt(month, 10)
-      );
-    }
-    return true; // "all" filter
-  });
+  const filteredTrips = earnings
+    .sort((a, b) => parseDate(b.tripDate) - parseDate(a.tripDate)) // Sort by tripDate in descending order
+    .filter((trip) => {
+      const tripDate = parseDate(trip.tripDate);
+      if (filterType === "dateRange") {
+        const start = startDate ? new Date(startDate) : null;
+        const end = endDate ? new Date(endDate) : null;
+        return (!start || tripDate >= start) && (!end || tripDate <= end);
+      } else if (filterType === "monthly") {
+        const [year, month] = selectedMonth.split("-");
+        return (
+          tripDate.getFullYear() === parseInt(year, 10) &&
+          tripDate.getMonth() + 1 === parseInt(month, 10)
+        );
+      }
+      return true; // "all" filter
+    });
 
   // Calculate total earnings
   const totalEarnings = filteredTrips
@@ -51,7 +53,7 @@ const Earnings = () => {
   }).format(totalEarnings);
 
   // Calculate the percentage for the circular progress bar
-  const earningsPercentage = (totalEarnings / 5000) * 100; // Assuming 5000 as the target earnings
+  // const earningsPercentage = (totalEarnings / 5000) * 100; // Assuming 5000 as the target earnings
 
   // Pagination Logic: Get trips for the current page
   const indexOfLastTrip = currentPage * itemsPerPage;
@@ -168,18 +170,20 @@ const Earnings = () => {
       <div className="mt-6">
         <table className="w-full table-auto">
           <thead>
-            <tr className="border-b">
+            <tr>
               <th className="py-2 text-left text-gray-600">Trip Date</th>
               <th className="py-2 text-left text-gray-600">Amount</th>
+              <th className="py-2 text-left text-gray-600">Paid On</th>
               <th className="py-2 text-left text-gray-600">Trip Id</th>
             </tr>
           </thead>
           <tbody>
             {currentTrips.map((trip, index) => (
-              <tr key={index} className="border-b">
+              <tr key={index}>
                 <td className="py-2">{trip.tripDate}</td>
                 <td className="py-2">{`₹ ${trip.amount}`}</td>
-                <td className="py-2">{tripDetails[index]["tripID"]}</td>
+                <td className="py-2">{trip.paidOn}</td>
+                <td className="py-2">{trip.tripID}</td>
               </tr>
             ))}
           </tbody>

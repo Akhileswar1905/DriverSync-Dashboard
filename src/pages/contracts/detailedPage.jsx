@@ -3,7 +3,12 @@ import { useLocation } from "react-router-dom";
 import { UserContext } from "../../context/UserContext";
 import Modal from "./components/Model";
 import { FaPlus } from "react-icons/fa6";
-import { assignContractDriver, assignContractPanel } from "../../lib/utils";
+import {
+  assignContractDriver,
+  assignContractPanel,
+  getCp,
+  getDriver,
+} from "../../lib/utils";
 
 const ContractDetailsPage = () => {
   const location = useLocation();
@@ -17,13 +22,17 @@ const ContractDetailsPage = () => {
   const [filteredPanels, setFilteredPanels] = useState([]);
   const [filteredDrivers, setFilteredDrivers] = useState([]);
   const [err, setErr] = useState("");
+  const [loading, setLoading] = useState(false);
 
   const handleAssigningPanels = async (e) => {
     e.preventDefault();
+    setLoading(true);
     const res = await assignContractPanel(contract, selectedPanels);
     if (res) {
+      setLoading(false);
       closeModal();
     } else {
+      setLoading(false);
       setErr("Failed to assign panels to contract");
     }
   };
@@ -38,41 +47,59 @@ const ContractDetailsPage = () => {
   };
 
   useEffect(() => {
-    if (user) {
-      if (!user.isAdmin) {
-        const matchingDrivers = [];
-        const otherDrivers = [];
-        user.drivers.forEach((driver) => {
-          if (driver.contractDetails.length > 0) {
-            driver.contractDetails.forEach((con) => {
-              if (con.contractId === contract.contractId) {
+    const fetcher = async () => {
+      if (user) {
+        if (!user.isAdmin) {
+          const matchingDrivers = [];
+          const otherDrivers = [];
+          for (const d of user.drivers) {
+            const driver = await getDriver(d);
+
+            if (
+              Array.isArray(driver.contractDetails) &&
+              driver.contractDetails.length > 0
+            ) {
+              const hasMatchingContract = driver.contractDetails.some(
+                (con) => con.contractId === contract.contractId
+              );
+
+              if (hasMatchingContract) {
                 matchingDrivers.push(driver);
+              } else {
+                otherDrivers.push(driver);
               }
-            });
-          } else {
-            otherDrivers.push(driver);
+            } else {
+              otherDrivers.push(driver);
+            }
           }
-        });
-        setDrivers(matchingDrivers);
-        setFilteredDrivers(otherDrivers);
-      } else {
-        const matchingPanels = [];
-        const otherPanels = [];
-        user.controlPanels.forEach((panel) => {
-          if (panel.contracts.length > 0) {
-            panel.contracts.forEach((con) => {
-              if (con.contractId === contract.contractId) {
+          setDrivers(matchingDrivers);
+          setFilteredDrivers(otherDrivers);
+        } else {
+          const matchingPanels = [];
+          const otherPanels = [];
+          for (const p of user.controlPanels) {
+            const panel = await getCp(p);
+
+            if (Array.isArray(panel.contracts) && panel.contracts.length > 0) {
+              const hasMatchingContract = panel.contracts.some(
+                (con) => con.contractId === contract.contractId
+              );
+
+              if (hasMatchingContract) {
                 matchingPanels.push(panel);
+              } else {
+                otherPanels.push(panel);
               }
-            });
-          } else {
-            otherPanels.push(panel);
+            } else {
+              otherPanels.push(panel);
+            }
           }
-        });
-        setControlPanels(matchingPanels);
-        setFilteredPanels(otherPanels);
+          setControlPanels(matchingPanels);
+          setFilteredPanels(otherPanels);
+        }
       }
-    }
+    };
+    fetcher();
   }, [user, contract.contractId]);
 
   const openModal = () => setModalOpen(true);
@@ -251,28 +278,56 @@ const ContractDetailsPage = () => {
           </tbody>
           {selectedPanels.length > 0 && (
             <tr>
-              <button
-                className="px-4 py-2 bg-primary-green rounded-lg mt-5 text-white"
-                onClick={(e) => {
-                  handleAssigningPanels(e);
-                }}
-              >
-                Proceed
-              </button>
+              {loading ? (
+                <button
+                  type="button"
+                  className="px-2 py-2  rounded-lg mt-5"
+                  disabled
+                >
+                  <svg
+                    className="animate-spin h-5 w-5 mr-3 ..."
+                    viewBox="0 0 24 24"
+                  ></svg>
+                  Processing...
+                </button>
+              ) : (
+                <button
+                  className="px-4 py-2 bg-primary-green rounded-lg mt-5 text-white"
+                  onClick={(e) => {
+                    handleAssigningPanels(e);
+                  }}
+                >
+                  Proceed
+                </button>
+              )}
 
               {err && <p className="text-red-950 mt-4">{err}</p>}
             </tr>
           )}
           {selectedDriver && selectedDriver.length > 0 && (
             <tr>
-              <button
-                className="px-4 py-2 bg-primary-green rounded-lg mt-5 text-white"
-                onClick={(e) => {
-                  handleAssigningDrivers(e);
-                }}
-              >
-                Proceed
-              </button>
+              {loading ? (
+                <button
+                  type="button"
+                  className="py-2  rounded-lg mt-5 "
+                  disabled
+                >
+                  <svg
+                    className="animate-spin h-5 w-5 mr-3"
+                    viewBox="0 0 24 24"
+                  ></svg>
+                  Processing...
+                </button>
+              ) : (
+                <button
+                  className="px-4 py-2 bg-primary-green rounded-lg mt-5 text-white"
+                  onClick={(e) => {
+                    handleAssigningDrivers(e);
+                  }}
+                >
+                  Proceed
+                </button>
+              )}
 
               {err && <p className="text-red-950 mt-4">{err}</p>}
             </tr>
