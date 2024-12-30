@@ -10,6 +10,9 @@ const ReviewedReport = () => {
   const { user } = useContext(UserContext);
   const { report } = location.state;
 
+  // Tab state
+  const [activeTab, setActiveTab] = useState("valid");
+
   useEffect(() => {
     const getCP = async () => {
       if (user.isAdmin) {
@@ -55,53 +58,83 @@ const ReviewedReport = () => {
           )}
         </h1>
 
-        <div className="flex mt-4 flex-col">
-          <h1 className="text-2xl text-grayish">Valid Trips </h1>
-          <table className="border-collapse w-full text-left mt-4">
-            <thead>
-              <tr className="font-light">
-                <th className="py-3 font-normal">Driver</th>
-                <th className="py-3 font-normal">Vehicle Number</th>
-                <th className="py-3 font-normal">Trip Date</th>
-                <th className="py-3 font-normal">Trip Id</th>
-              </tr>
-            </thead>
-            <tbody>
-              {report.validTrips.map((trip, index) => (
-                <tr key={index}>
-                  <td className="py-4">{trip.driverName}</td>
-                  <td className="py-4">{trip.vehicleNumber}</td>
-                  <td className="py-4">{trip.tripDate}</td>
-                  <td className="py-4">{trip.tripID}</td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
+        {/* Tabs */}
+        <div className="flex gap-6 mt-4">
+          <button
+            className={`${
+              activeTab === "valid"
+                ? "text-primary-green border-b-2 border-primary-green"
+                : "text-gray-600"
+            } pb-2`}
+            onClick={() => setActiveTab("valid")}
+          >
+            Valid Trips
+          </button>
+          <button
+            className={`${
+              activeTab === "invalid"
+                ? "text-primary-green border-b-2 border-primary-green"
+                : "text-gray-600"
+            } pb-2`}
+            onClick={() => setActiveTab("invalid")}
+          >
+            Invalid Trips
+          </button>
         </div>
 
-        <div className="flex mt-4 flex-col">
-          <h1 className="text-2xl text-grayish">Invalid Trips </h1>
-          <table className="border-collapse w-full text-left mt-4">
-            <thead>
-              <tr className="font-light">
-                <th className="py-3 font-normal">Driver</th>
-                <th className="py-3 font-normal">Vehicle Number</th>
-                <th className="py-3 font-normal">Trip Date</th>
-                <th className="py-3 font-normal">Trip Id</th>
-              </tr>
-            </thead>
-            <tbody>
-              {report.inValidTrips.map((trip, index) => (
-                <tr key={index}>
-                  <td className="py-4">{trip.driverName}</td>
-                  <td className="py-4">{trip.vehicleNumber}</td>
-                  <td className="py-4">{trip.tripDate}</td>
-                  <td className="py-4">{trip.tripID}</td>
+        {/* Valid Trips Table */}
+        {activeTab === "valid" && (
+          <div className="flex mt-4 flex-col">
+            {/* <h1 className="text-2xl text-grayish">Valid Trips</h1> */}
+            <table className="border-collapse w-full text-left ">
+              <thead>
+                <tr className="font-light">
+                  <th className="py-3 font-normal">Driver</th>
+                  <th className="py-3 font-normal">Vehicle Number</th>
+                  <th className="py-3 font-normal">Trip Date</th>
+                  <th className="py-3 font-normal">Trip Id</th>
                 </tr>
-              ))}
-            </tbody>
-          </table>
-        </div>
+              </thead>
+              <tbody>
+                {report.validTrips.map((trip, index) => (
+                  <tr key={index}>
+                    <td className="py-4">{trip.driverName}</td>
+                    <td className="py-4">{trip.vehicleNumber}</td>
+                    <td className="py-4">{trip.tripDate}</td>
+                    <td className="py-4">{trip.tripID}</td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        )}
+
+        {/* Invalid Trips Table */}
+        {activeTab === "invalid" && (
+          <div className="flex mt-4 flex-col">
+            {/* <h1 className="text-2xl text-grayish">Invalid Trips</h1> */}
+            <table className="border-collapse w-full text-left ">
+              <thead>
+                <tr className="font-light">
+                  <th className="py-3 font-normal">Driver</th>
+                  <th className="py-3 font-normal">Vehicle Number</th>
+                  <th className="py-3 font-normal">Trip Date</th>
+                  <th className="py-3 font-normal">Trip Id</th>
+                </tr>
+              </thead>
+              <tbody>
+                {report.inValidTrips.map((trip, index) => (
+                  <tr key={index}>
+                    <td className="py-4">{trip.driverName}</td>
+                    <td className="py-4">{trip.vehicleNumber}</td>
+                    <td className="py-4">{trip.tripDate}</td>
+                    <td className="py-4">{trip.tripID}</td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        )}
       </div>
     </div>
   );

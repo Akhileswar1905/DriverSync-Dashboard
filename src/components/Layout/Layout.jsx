@@ -29,7 +29,7 @@ const Layout = ({ children }) => {
   // Admin Layout
   if (isAdmin) {
     return (
-      <div className="flex h-screen">
+      <div className="flex h-screen relative">
         <Sidebar />
         <div className="flex-1">
           <Header />
@@ -41,7 +41,7 @@ const Layout = ({ children }) => {
 
   // General Layout
   return (
-    <div className="flex h-screen">
+    <div className="flex h-screen relative">
       <Sidebar />
       <div className="flex-1">
         <Header />

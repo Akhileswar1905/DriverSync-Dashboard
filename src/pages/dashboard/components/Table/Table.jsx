@@ -23,7 +23,7 @@ const Table = () => {
   const [endDate, setEndDate] = useState("");
   const [isDateFilterOpen, setIsDateFilterOpen] = useState(false);
 
-  const rowsPerPage = 10;
+  const rowsPerPage = 7;
 
   // Filter data
   const filteredData = data.filter((row) => {
