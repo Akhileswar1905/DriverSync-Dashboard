@@ -8,7 +8,7 @@ const ContractTable = () => {
   const [companies, setCompanies] = useState(user?.contracts);
 
   const [currentPage, setCurrentPage] = useState(1);
-  const rowsPerPage = 3;
+  const rowsPerPage = 8;
 
   const totalPages = Math.ceil(companies?.length / rowsPerPage);
 
