@@ -1,6 +1,6 @@
 import { MdDashboard, MdDirectionsCarFilled } from "react-icons/md";
 import { FaFileContract, FaMoneyBillAlt } from "react-icons/fa";
-import { IoIosNotifications } from "react-icons/io";
+import { IoIosNotifications, IoIosPeople } from "react-icons/io";
 import { HiPencilAlt } from "react-icons/hi";
 
 import Dashboard from "../../../pages/dashboard/page";
@@ -36,7 +36,7 @@ export const links = [
   {
     name: "Control Panels",
     path: "/control-panels",
-    icon: MdDirectionsCarFilled,
+    icon: IoIosPeople,
     requests: 0,
     component: ControlPanel,
     detailsPath: "/control-panels/:id",
